@@ -1295,7 +1295,15 @@ body {
     .hud {
         padding: 4px 8px;
         gap: 6px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-areas: "left right" "center center";
     }
+
+    .hud-left { grid-area: left; gap: 8px; min-width: 0; }
+    .hud-center { grid-area: center; width: 100%; max-width: none; min-width: 0; gap: 8px; }
+    .hud-right { grid-area: right; gap: 5px; min-width: 0; }
+    .nitro-container { min-width: 0; max-width: none; }
 
     .hud-label, .speed-unit, .lives-label {
         font-size: 0.7rem;
