@@ -12,6 +12,11 @@
     #back{min-height:38px;padding:5px 12px;border:1px solid #f3d58a;border-radius:9px;background:#f4e6c7;color:#24372f;font-weight:800;font:inherit}
     #heading{min-width:0;display:grid;gap:1px}#title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:800;color:#ffe082}#goal{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;line-height:1.2;color:#e5ecd9}
     #game{display:block;width:100%;height:100%;border:0;background:#101a20}
+    body.portrait-mode{background:#07130f}
+    body.portrait-mode header{width:min(100%,calc((100dvh - 54px) * .5625));margin:0 auto;padding-left:6px;padding-right:6px}
+    body.portrait-mode #game{width:min(100%,calc((100dvh - 54px) * .5625));height:100%;margin:0 auto;background:#0d1117}
+    body.portrait-mode.river-mode header{width:min(100%,calc((100dvh - 54px) * .75))}
+    body.portrait-mode.river-mode #game{width:min(100%,calc((100dvh - 54px) * .75));height:min(100%,calc(100vw * 1.333333));margin:auto;background:#101a20}
     #local-warning{display:none;position:absolute;z-index:5;left:12px;right:12px;top:60px;padding:14px;border:2px solid #f3d58a;border-radius:12px;background:#fff5dd;color:#24372f;line-height:1.4}
     #local-warning strong{display:block;margin-bottom:4px}
   </style>
@@ -28,13 +33,16 @@
         road:{title:'Desafio da locadora',src:'../../Jogos_importados/Road-Rush-main/game.html?challenge=anniversary',complete:'roadChallengeComplete',back:'roadChallengeReturn'},
         tictactoe:{title:'Tic-Tac-Toe na Initus',src:'../../Jogos_importados/Tic-Tac-Toe/index.html',complete:'ticTacToeChallengeComplete',back:'tictactoeChallengeReturn'},
         mine:{title:'Máquina de Mine',src:'../../Jogos_importados/Mine/index.html?challenge=anniversary',complete:'mineChallengeComplete',back:'mineChallengeReturn'},
-        simon:{title:'Simon da igreja',src:'../../Jogos_importados/Simon/index.html?challenge=anniversary',complete:'simonChallengeComplete',back:'simonChallengeReturn'},
+        simon:{title:'Simon da igreja',src:'../../Jogos_importados/Simon/index.html?challenge=anniversary&layout=vertical-3',complete:'simonChallengeComplete',back:'simonChallengeReturn'},
         river:{title:'Travessia do rio',src:'../../Jogos_importados/River-Rush-main/index.html?challenge=anniversary',complete:'riverChallengeComplete',back:'riverChallengeReturn'}
       };
       const key=new URLSearchParams(location.search).get('game');
       const params=new URLSearchParams(location.search);
       const config=games[key];
       const frame=document.getElementById('game');
+      const portraitGames=new Set(['road','river','simon','mine']);
+      document.body.classList.toggle('portrait-mode',portraitGames.has(key));
+      document.body.classList.toggle('river-mode',key==='river');
       if(!config){document.getElementById('title').textContent='Minigame indisponível';document.getElementById('back').addEventListener('click',()=>parent.postMessage({type:'minigameReturn'},'*'));}
       else{
         const title=params.get('title')||config.title;
