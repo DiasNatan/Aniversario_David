@@ -147,3 +147,9 @@ O arquivo `imagens/Icones/ficha_maquina.jpg` representa uma moeda com estrela. P
 - Conferidas as referências do HTML e JavaScript do jogo principal e dos minigames. Permaneceram em `Musica/` somente as seis faixas usadas: música principal, memória, corrida, Tic-Tac-Toe, ambiente do Apartamento no Centro e hospital.
 - Removidas oito faixas sem referências no projeto: `0 mirostar-gaming-game-video-game-music-560338.mp3`, `brutaldesign-pixel-art-481480.mp3`, `hitslab-gaming-game-minecraft-background-music-278382.mp3`, `jesuschristisgod-final-answer-christian-game-show-music-4jesus-312721.mp3`, `mirostar-game-gaming-video-game-music-560319.mp3`, `nunusev-video-game-battle-music-535133.mp3`, `retro-bgm-chan-server-room-523662.mp3` e `viacheslavstarostin-game-gaming-minecraft-background-music-370830.mp3`.
 - Validação: os seis arquivos referenciados existem; `node --check` passou nos quatro JavaScript principais relacionados à música e ao fluxo do jogo. Não foi feita uma rodada manual no navegador.
+
+## Minigames em retrato — 2 de novembro de 2026
+
+- Road Rush, River Rush, Simon e Mine agora usam molduras retrato centralizadas na tela dos minigames, aproveitando a altura disponível sem ampliar o conteúdo além das laterais.
+- Road Rush reorganiza o HUD em telas estreitas; River Rush preserva o canvas vertical nativo 3:4; Simon amplia o tabuleiro até o limite da largura disponível e oculta o link interno duplicado de voltar; Mine mantém o tabuleiro da fase fácil encaixado na largura.
+- Verificação visual no navegador em molduras de 320 × 640, 390 × 844 e na janela padrão do desktop. Os quatro minigames permaneceram dentro da largura disponível; não houve corte lateral observado.

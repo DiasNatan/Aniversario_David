@@ -18,6 +18,8 @@ Abra `index.html` pela raiz do projeto em um servidor local, como Laragon. O pro
 - `Mensagem_homenagem/`: página aberta pelo tablet no final.
 - `Cenas.pdf`: storyboard anotado; as telas PNG mais novas da pasta `Cenas/` definem a composição visual atual.
 
+Os minigames Road Rush, River Rush, Simon e Mine abrem em molduras de retrato centralizadas. O River Rush mantém a proporção vertical nativa do canvas (3:4); os outros usam uma moldura 9:16. Em telas estreitas, o HUD do Road Rush se reorganiza e o tabuleiro do Simon cresce até caber na largura disponível.
+
 ## Regras atuais da história
 
 O mapa é ilustrativo e não clicável. A navegação acontece pelas placas das cenas. As novas telas PNG da pasta `Cenas/` são a base; personagens, objetos clicáveis e ícones do inventário são posicionados por cima usando SVG. A sequência completa, dependências, recompensas e condições dos minigames está em [README do protótipo](Prototipos/Prototipo3_Exploracao_David/README.md). As decisões e mudanças registradas estão em [Histórico do jogo](HISTORICO_DO_JOGO.md).
