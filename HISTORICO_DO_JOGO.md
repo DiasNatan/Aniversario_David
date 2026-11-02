@@ -141,3 +141,9 @@ O arquivo `imagens/Icones/ficha_maquina.jpg` representa uma moeda com estrela. P
 
 - A música da aventura é suspensa enquanto o River Rush estiver aberto. O jogo mantém apenas sua trilha original e seus efeitos; ao sair, a cena retoma a música da aventura.
 - Os sete alvos do jogo das diferenças foram alinhados com os X enviados: quadro, TV, conjunto de luminárias (um alvo só), travesseiro, assento/objeto, planta na mesa lateral e objeto na mesa de centro. O alvo duplicado das luminárias foi trocado pelo travesseiro, que já é uma diferença visível nas imagens.
+
+## Limpeza da pasta de áudio — 2 de novembro de 2026
+
+- Conferidas as referências do HTML e JavaScript do jogo principal e dos minigames. Permaneceram em `Musica/` somente as seis faixas usadas: música principal, memória, corrida, Tic-Tac-Toe, ambiente do Apartamento no Centro e hospital.
+- Removidas oito faixas sem referências no projeto: `0 mirostar-gaming-game-video-game-music-560338.mp3`, `brutaldesign-pixel-art-481480.mp3`, `hitslab-gaming-game-minecraft-background-music-278382.mp3`, `jesuschristisgod-final-answer-christian-game-show-music-4jesus-312721.mp3`, `mirostar-game-gaming-video-game-music-560319.mp3`, `nunusev-video-game-battle-music-535133.mp3`, `retro-bgm-chan-server-room-523662.mp3` e `viacheslavstarostin-game-gaming-minecraft-background-music-370830.mp3`.
+- Validação: os seis arquivos referenciados existem; `node --check` passou nos quatro JavaScript principais relacionados à música e ao fluxo do jogo. Não foi feita uma rodada manual no navegador.
