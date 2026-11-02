@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#102522">
+  <title>Desafio</title>
+  <style>
+    *{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#102522;color:#fff8e8;font:16px system-ui,sans-serif}
+    #app{height:100dvh;display:grid;grid-template-rows:auto 1fr;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
+    header{min-height:54px;display:flex;align-items:center;gap:12px;padding:5px 10px;background:#14342f;border-bottom:1px solid #f3d58a;z-index:2}
+    #back{min-height:38px;padding:5px 12px;border:1px solid #f3d58a;border-radius:9px;background:#f4e6c7;color:#24372f;font-weight:800;font:inherit}
+    #heading{min-width:0;display:grid;gap:1px}#title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:800;color:#ffe082}#goal{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;line-height:1.2;color:#e5ecd9}
+    #game{display:block;width:100%;height:100%;border:0;background:#101a20}
+    #local-warning{display:none;position:absolute;z-index:5;left:12px;right:12px;top:60px;padding:14px;border:2px solid #f3d58a;border-radius:12px;background:#fff5dd;color:#24372f;line-height:1.4}
+    #local-warning strong{display:block;margin-bottom:4px}
+  </style>
+</head>
+<body>
+  <main id="app">
+    <header><button id="back" type="button">← Voltar</button><div id="heading"><span id="title">Desafio</span><small id="goal"></small></div></header>
+    <iframe id="game" allow="autoplay; fullscreen" title="Minigame"></iframe>
+  </main>
+  <aside id="local-warning"><strong>Abra a aventura pelo Laragon.</strong>Este minigame usa módulos JavaScript que o navegador bloqueia quando a página é aberta como arquivo (file://). Acesse pelo endereço local do Laragon para jogar.</aside>
+  <script>
+    (()=>{
+      const games={
+        road:{title:'Desafio da locadora',src:'../../Jogos_importados/Road-Rush-main/game.html?challenge=anniversary',complete:'roadChallengeComplete',back:'roadChallengeReturn'},
+        tictactoe:{title:'Tic-Tac-Toe na Initus',src:'../../Jogos_importados/Tic-Tac-Toe/index.html',complete:'ticTacToeChallengeComplete',back:'tictactoeChallengeReturn'},
+        mine:{title:'Máquina de Mine',src:'../../Jogos_importados/Mine/index.html?challenge=anniversary',complete:'mineChallengeComplete',back:'mineChallengeReturn'},
+        simon:{title:'Simon da igreja',src:'../../Jogos_importados/Simon/index.html?challenge=anniversary',complete:'simonChallengeComplete',back:'simonChallengeReturn'},
+        river:{title:'Travessia do rio',src:'../../Jogos_importados/River-Rush-main/index.html?challenge=anniversary',complete:'riverChallengeComplete',back:'riverChallengeReturn'}
+      };
+      const key=new URLSearchParams(location.search).get('game');
+      const params=new URLSearchParams(location.search);
+      const config=games[key];
+      const frame=document.getElementById('game');
+      if(!config){document.getElementById('title').textContent='Minigame indisponível';document.getElementById('back').addEventListener('click',()=>parent.postMessage({type:'minigameReturn'},'*'));}
+      else{
+        const title=params.get('title')||config.title;
+        document.title=title+' · Aventura de David';
+        document.getElementById('title').textContent=title;
+        document.getElementById('goal').textContent=params.get('goal')||'';
+        frame.title=config.title;
+        frame.src=config.src;
+        document.getElementById('back').addEventListener('click',()=>{
+          frame.contentWindow.postMessage({type:'challengeStopMusic'},'*');
+          setTimeout(()=>parent.postMessage({type:config.back},'*'),500);
+        });
+        window.addEventListener('message',event=>{
+          if(event.source===parent&&event.data?.type==='challengeStopMusic'){
+            frame.contentWindow.postMessage(event.data,'*');
+            return;
+          }
+          if(event.source!==frame.contentWindow||!event.data||typeof event.data.type!=='string')return;
+          if(event.data.type===config.complete||event.data.type===config.back)parent.postMessage(event.data,'*');
+        });
+      }
+      if(location.protocol==='file:')document.getElementById('local-warning').style.display='block';
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" width="100%" height="100%">
+  <defs>
+    <linearGradient id="stick-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#EED6B1" />
+      <stop offset="50%" stop-color="#F7E7CE" />
+      <stop offset="100%" stop-color="#D6B585" />
+    </linearGradient>
+    <style>
+      .stick-line { stroke: #5C4033; stroke-width: 3; stroke-linejoin: round; }
+    </style>
+  </defs>
+
+  <g class="stick-line">
+    <!-- Baqueta 1 (Inclinada subindo) -->
+    <g transform="rotate(-20 400 200)">
+      <path d="M 100 190 L 680 194 L 700 196 C 710 196, 715 200, 715 200 C 715 200, 710 204, 700 204 L 680 206 L 100 210 Z" fill="url(#stick-grad)" />
+      <ellipse cx="722" cy="200" rx="12" ry="7" fill="url(#stick-grad)" />
+      <!-- Anéis decorativos na base -->
+      <line x1="140" y1="191" x2="140" y2="209" stroke="#000" stroke-width="6" />
+      <line x1="155" y1="191" x2="155" y2="209" stroke="#000" stroke-width="6" />
+    </g>
+
+    <!-- Baqueta 2 (Inclinada descendo) -->
+    <g transform="rotate(20 400 200)">
+      <path d="M 100 190 L 680 194 L 700 196 C 710 196, 715 200, 715 200 C 715 200, 710 204, 700 204 L 680 206 L 100 210 Z" fill="url(#stick-grad)" />
+      <ellipse cx="722" cy="200" rx="12" ry="7" fill="url(#stick-grad)" />
+      <!-- Anéis decorativos na base -->
+      <line x1="140" y1="191" x2="140" y2="209" stroke="#000" stroke-width="6" />
+      <line x1="155" y1="191" x2="155" y2="209" stroke="#000" stroke-width="6" />
+    </g>
+  </g>
+</svg>
