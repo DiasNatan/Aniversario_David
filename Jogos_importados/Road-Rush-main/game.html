@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Road Rush - Play</title>
+    <link rel="stylesheet" href="./css/common.css">
+    <link rel="stylesheet" href="./css/game-play.css">
+    <script type="module" src="./js/game-play.js" defer></script>
+</head>
+
+<body>
+    <main class="game">
+        <!-- GAME SCREEN -->
+        <section class="game-screen" id="gameScreen">
+            <div class="hud">
+                <div class="hud-left">
+                    <div class="hud-stat score-stat">
+                        <span class="hud-label">SCORE</span>
+                        <span class="score">0</span>
+                    </div>
+                    <div class="hud-stat coins-stat">
+                        <div class="coin-medallion">
+                            <div class="coin-disc">
+                                <span class="coin-symbol">$</span>
+                            </div>
+                        </div>
+                        <span class="hud-label">COINS</span>
+                        <span class="coins-count">0</span>
+                    </div>
+                </div>
+
+                <div class="hud-center">
+                    <div class="nitro-container">
+                        <div class="nitro-header">
+                            <span class="nitro-label">⚡ NITRO</span>
+                            <span class="nitro-percent">40%</span>
+                        </div>
+                        <div class="nitro-bar-track">
+                            <div class="nitro-lightning-aura"></div>
+                            <div class="nitro-bar-fill" id="nitroBarFill" style="width: 40%;"></div>
+                        </div>
+                    </div>
+                    <button class="nitro-action-btn" id="nitroActionBtn" title="Boost! (Space)">
+                        ⚡ NEED BOOST!
+                    </button>
+                </div>
+
+                <div class="hud-right">
+                    <div class="hud-stat speed-stat">
+                        <span class="hud-label">SPEED</span>
+                        <span class="speed">0</span>
+                        <span class="speed-unit">KM/H</span>
+                    </div>
+                    <div class="lives-container">
+                        <span class="lives-label">HP</span>
+                        <span class="lives-paren">(</span>
+                        <div class="lives" id="livesContainer">
+                            <span class="life-heart">❤️</span>
+                            <span class="life-heart">❤️</span>
+                            <span class="life-heart">❤️</span>
+                        </div>
+                        <span class="lives-paren">)</span>
+                    </div>
+                    <button class="audio-btn" id="audioBtn" title="Toggle audio (M)" aria-label="Toggle audio">🔊</button>
+                    <button class="pause-btn" id="pauseBtn" title="Pause game">⏸</button>
+                </div>
+            </div>
+
+            <div class="game-arena-wrapper">
+                <!-- 3-Lane Asphalt Road -->
+                <div class="road" id="roadElement">
+                    <div class="road-curb road-curb-left"></div>
+                    <div class="road-curb road-curb-right"></div>
+                    <div class="asphalt-texture"></div>
+                    <div class="skid-marks-layer"></div>
+                    <div class="speed-lines-overlay"></div>
+                    <div class="lane-marking lane-1"></div>
+                    <div class="lane-marking lane-2"></div>
+                    <div class="player-car" id="playerCar">
+                        <div class="exhaust-flames">
+                            <span class="flame flame-left"></span>
+                            <span class="flame flame-right"></span>
+                        </div>
+                        <div class="exhaust-sparks">
+                            <span class="spark s1"></span>
+                            <span class="spark s2"></span>
+                            <span class="spark s3"></span>
+                            <span class="spark s4"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- START RACE 3-SECOND COUNTDOWN OVERLAY -->
+            <div class="countdown-overlay hidden" id="countdownOverlay">
+                <div class="countdown-card">
+                    <span class="countdown-label">GET READY</span>
+                    <div class="countdown-number count-3" id="countdownNumber">3</div>
+                </div>
+            </div>
+
+            <!-- Mobile Steer Touch Controls -->
+            <div class="mobile-controls">
+                <button class="steer-btn steer-left" id="steerLeftBtn" aria-label="Steer Left">◀</button>
+                <button class="mobile-nitro-btn" id="mobileNitroBtn" aria-label="Activate Nitro">⚡ NITRO</button>
+                <button class="steer-btn steer-right" id="steerRightBtn" aria-label="Steer Right">▶</button>
+            </div>
+        </section>
+
+        <!-- GAME OVER SCREEN -->
+        <section class="game-over-screen hidden" id="gameOverScreen">
+            <div class="game-over-content">
+                <div class="game-over-header">
+                    <h2 class="game-over-title">GAME OVER</h2>
+                    <div class="new-record-badge hidden" id="newRecordBadge">NEW HIGH SCORE!</div>
+                </div>
+
+                <div class="game-stats">
+                    <div class="stat highlight-stat">
+                        <span class="stat-label">FINAL SCORE</span>
+                        <span class="final-score">0</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">COINS COLLECTED</span>
+                        <span class="final-coins">0</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">MAX COINS (RECORD)</span>
+                        <span class="best-coins">0</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">TOTAL VAULT BALANCE</span>
+                        <span class="final-coins" id="totalVaultCoins" style="color: #ffd700; font-weight: 700;">0 COINS</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">DISTANCE</span>
+                        <span class="distance">0m</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">TOP SPEED</span>
+                        <span class="top-speed">0</span>
+                    </div>
+                    <div class="stat career-stat">
+                        <span class="stat-label">ALL-TIME BEST SCORE</span>
+                        <span class="best-score">0</span>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button class="retry-btn" id="retryBtn">PLAY AGAIN</button>
+                    <a href="index.html?open=garage" class="retry-btn" id="garageBtn" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #ff9100, #ff3d00); border-color: #ffd180; box-shadow: 0 0 15px rgba(255, 145, 0, 0.4);">GARAGE</a>
+                    <button class="home-btn" id="homeBtn">HOME</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- PAUSE SCREEN -->
+        <section class="pause-screen hidden" id="pauseScreen">
+            <div class="pause-content">
+                <div class="pause-header">
+                    <h2 class="pause-title">PAUSED</h2>
+                </div>
+
+                <div class="pause-hints">
+                    <p>Tip: Collect <span class="hint-highlight yellow">Coins</span> to buy supercars in the Garage!</p>
+                    <p>Tip: Collect <span class="hint-highlight cyan">Nitro</span> to safely boost through traffic!</p>
+                </div>
+
+                <div class="pause-button-group">
+                    <button class="resume-btn" id="resumeBtn">RESUME</button>
+                    <button class="restart-btn" id="pauseRestartBtn">RESTART</button>
+                    <button class="quit-btn" id="quitBtn">HOME</button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+</body>
+
+</html>

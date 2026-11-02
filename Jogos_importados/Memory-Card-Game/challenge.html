@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Memória — desafio do Altiplano</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body{min-height:100dvh;background:#183d38;color:#fff8e8;padding:12px;font-family:system-ui,sans-serif}
+    .challenge{width:min(100%,560px);padding:clamp(12px,3vw,22px);border:2px solid #e1ba63;border-radius:18px;background:#102522;box-shadow:0 10px 30px #0006;text-align:center}
+    h1{font-size:clamp(18px,4vw,26px);color:#f3c765;margin:0 0 6px}.intro{margin:0 auto 12px;line-height:1.35;font-size:clamp(13px,2.5vw,16px)}
+    .progress{font-weight:800;margin-bottom:10px;color:#ffe39b}
+    .wrapper{padding:0;background:transparent;box-shadow:none;border-radius:0}.cards{width:min(100%,460px);height:auto;aspect-ratio:1;margin:auto;display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(3,1fr);gap:8px}
+    .cards .card{width:auto;height:auto;min-width:0;min-height:0}.card .view{border-radius:10px}.card .front-view{background:#e9d6a9}.card .front-view img{width:28px}.card .back-view img{width:min(72%,64px);max-width:100%;max-height:82%;object-fit:contain}
+    .card.matched .view{box-shadow:0 0 0 3px #65c982}.card.matched{cursor:default}
+    @media(max-height:560px) and (orientation:landscape){body{padding:5px}.challenge{display:flex;align-items:center;gap:14px;width:min(100%,900px);padding:8px 14px}.summary{width:30%}.cards{width:min(62vh,430px);flex:0 0 auto}.card .front-view img{width:20px}}
+  </style>
+</head>
+<body>
+  <main class="challenge">
+    <div class="summary">
+      <h1>Memória do Altiplano</h1>
+      <p class="intro">Encontre os seis pares para conquistar o crachá.</p>
+      <div class="progress" id="progress" aria-live="polite">Pares: 0 / 6</div>
+    </div>
+    <div class="wrapper"><ul class="cards" id="cards" aria-label="Cartas da memória"></ul></div>
+  </main>
+  <script src="challenge.js"></script>
+</body>
+</html>

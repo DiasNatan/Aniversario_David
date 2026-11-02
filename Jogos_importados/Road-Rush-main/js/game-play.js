@@ -1,0 +1,525 @@
+import { game } from './game.js';
+import { player } from './player.js';
+import { keys } from './input.js';
+import { storage } from './storage.js';
+import { audio } from './audio.js';
+import { getCarById } from './cars.js';
+
+const gameScreen = document.getElementById('gameScreen');
+const gameOverScreen = document.getElementById('gameOverScreen');
+const pauseScreen = document.getElementById('pauseScreen');
+
+const scoreDisplay = document.querySelector('.score');
+const coinsDisplay = document.querySelector('.coins-count');
+const speedDisplay = document.querySelector('.speed');
+const livesDisplay = document.querySelector('.lives');
+
+const nitroBarFill = document.getElementById('nitroBarFill');
+const nitroPercent = document.querySelector('.nitro-percent');
+const nitroActionBtn = document.getElementById('nitroActionBtn');
+const mobileNitroBtn = document.getElementById('mobileNitroBtn');
+const steerLeftBtn = document.getElementById('steerLeftBtn');
+const steerRightBtn = document.getElementById('steerRightBtn');
+
+const pauseBtn = document.getElementById('pauseBtn');
+const audioBtn = document.getElementById('audioBtn');
+const retryBtn = document.getElementById('retryBtn');
+const homeBtn = document.getElementById('homeBtn');
+const resumeBtn = document.getElementById('resumeBtn');
+const quitBtn = document.getElementById('quitBtn');
+
+const finalScoreDisplay = document.querySelector('.final-score');
+const finalCoinsDisplay = document.querySelector('.final-coins');
+const distanceDisplay = document.querySelector('.distance');
+const topSpeedDisplay = document.querySelector('.top-speed');
+const bestScoreDisplay = document.querySelector('.best-score');
+const bestCoinsDisplay = document.querySelector('.best-coins');
+const newRecordBadge = document.getElementById('newRecordBadge');
+
+const countdownOverlay = document.getElementById('countdownOverlay');
+const countdownNumber = document.getElementById('countdownNumber');
+
+let countdownInterval = null;
+let isCountingDown = false;
+// Keep the birthday challenge active when this game is embedded, even if a
+// hosting layer removes the query string from the iframe URL.
+const challengeMode = new URLSearchParams(window.location.search).get('challenge') === 'anniversary' || window.parent !== window;
+const challengeMusic = challengeMode ? new Audio('../../Musica/dmassaiii%20-%20Minigame%20corrida.mp3') : null;
+let challengeMusicUnlocked = false;
+let challengeMusicPlaying = false;
+let challengeMusicFinished = false;
+let challengeMusicFading = false;
+let challengeMusicFadeToken = 0;
+if (challengeMusic) {
+    challengeMusic.loop = true;
+    challengeMusic.preload = 'auto';
+    challengeMusic.volume = 0.28;
+}
+
+function startChallengeMusic() {
+    if (!challengeMusic || challengeMusicFinished) return;
+    challengeMusicUnlocked = true;
+    if (challengeMusicPlaying && !challengeMusic.paused) {
+        if (challengeMusicFading) {
+            challengeMusicFading = false;
+            const token = ++challengeMusicFadeToken;
+            const startVolume = challengeMusic.volume;
+            const startedAt = performance.now();
+            const fadeIn = now => {
+                if (token !== challengeMusicFadeToken) return;
+                const progress = Math.min(1, (now - startedAt) / 300);
+                challengeMusic.volume = startVolume + (0.28 - startVolume) * progress;
+                if (progress < 1) requestAnimationFrame(fadeIn);
+            };
+            requestAnimationFrame(fadeIn);
+        }
+        return;
+    }
+    challengeMusic.play().then(() => {
+        if (challengeMusicFinished) {
+            challengeMusic.pause();
+            challengeMusic.currentTime = 0;
+            return;
+        }
+        challengeMusicPlaying = true;
+    }).catch(() => {});
+}
+
+function stopChallengeMusic(done = () => {}, finish = false) {
+    if (!challengeMusic || challengeMusic.paused) {
+        if (finish) challengeMusicFinished = true;
+        challengeMusicPlaying = false;
+        done();
+        return;
+    }
+    const token = ++challengeMusicFadeToken;
+    challengeMusicFading = true;
+    const startVolume = challengeMusic.volume;
+    const startedAt = performance.now();
+    const fade = now => {
+        if (token !== challengeMusicFadeToken) return;
+        const progress = Math.min(1, (now - startedAt) / 450);
+        challengeMusic.volume = startVolume * (1 - progress);
+        if (progress < 1) requestAnimationFrame(fade);
+        else {
+            challengeMusic.pause();
+            challengeMusic.currentTime = 0;
+            challengeMusic.volume = 0.28;
+            challengeMusicPlaying = false;
+            challengeMusicFading = false;
+            if (finish) challengeMusicFinished = true;
+            done();
+        }
+    };
+    requestAnimationFrame(fade);
+}
+
+if (challengeMode) {
+    document.addEventListener('pointerdown', startChallengeMusic, { once: true, capture: true });
+    document.addEventListener('keydown', startChallengeMusic, { once: true, capture: true });
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) stopChallengeMusic();
+        else if (challengeMusicUnlocked) startChallengeMusic();
+    });
+    window.addEventListener('message', event => {
+        if (event.data?.type === 'challengeStopMusic') stopChallengeMusic(() => {}, true);
+    });
+}
+const challengeBanner = challengeMode ? (() => {
+    const el = document.createElement('div');
+    el.id = 'anniversaryChallengeBanner';
+    el.textContent = 'DESAFIO DA LOCADORA · SOBREVIVA 50 SEGUNDOS';
+    Object.assign(el.style, { position: 'fixed', zIndex: '100', top: '64px', left: '50%', transform: 'translateX(-50%)', padding: '9px 14px', borderRadius: '12px', background: '#173b36ee', color: '#ffe082', font: '800 14px system-ui', textAlign: 'center', boxShadow: '0 2px 12px #0008', width: 'max-content', maxWidth: '94vw' });
+    document.body.appendChild(el);
+    document.querySelectorAll('.score-stat, .coins-stat').forEach(item => item.style.display = 'none');
+    const pauseHints = document.querySelector('.pause-hints');
+    if (pauseHints) pauseHints.innerHTML = '<p>Desafio da locadora: sobreviva aos 50 segundos para ganhar a ficha.</p><p>Use as setas para desviar do trânsito.</p>';
+    return el;
+})() : null;
+
+const playerCarElement = document.getElementById('playerCar');
+const roadElement = document.getElementById('roadElement');
+
+const playerInitialized = () => {
+    const selectedCar = getCarById(storage.getSelectedCarId());
+    player.initialize(playerCarElement, selectedCar);
+};
+
+const showGameOverScreen = (completed = false) => {
+    gameScreen.classList.add('hidden');
+    gameOverScreen.classList.remove('hidden');
+
+    if (challengeMode) {
+        const title = gameOverScreen.querySelector('.game-over-title');
+        title.textContent = completed ? 'DESAFIO CONCLUÍDO!' : 'COLISÃO!';
+        gameOverScreen.querySelector('.game-stats').innerHTML = completed
+            ? '<p style="font-size:1.15rem;text-align:center">Você aguentou 50 segundos na pista e ganhou uma ficha para a máquina do Parque Solon.</p>'
+            : '<p style="font-size:1.15rem;text-align:center">A corrida terminou antes da hora. Tente novamente para conquistar a ficha.</p>';
+        gameOverScreen.querySelector('.button-group').innerHTML = completed
+            ? '<button class="retry-btn" id="continueAnniversary">CONTINUAR A AVENTURA</button>'
+            : '<button class="retry-btn" id="retryBtn">TENTAR DE NOVO</button>';
+        if (completed) {
+            document.getElementById('continueAnniversary').addEventListener('click', () => stopChallengeMusic(() => window.parent.postMessage({ type: 'roadChallengeComplete' }, '*'), true));
+        } else {
+            document.getElementById('retryBtn').addEventListener('click', retryGame);
+        }
+        return;
+    }
+
+    const finalScore = Math.floor(game.score);
+    const finalCoins = game.coins;
+    const distanceMeters = Math.floor((game.score / 10) * 20);
+    const topSpeedVal = Math.round(game.topSpeed);
+
+    // Save race result to localStorage
+    const record = storage.recordRaceResult({
+        score: finalScore,
+        coins: finalCoins,
+        distance: distanceMeters,
+        topSpeed: topSpeedVal
+    });
+
+    finalScoreDisplay.textContent = finalScore.toLocaleString();
+    finalCoinsDisplay.textContent = finalCoins.toLocaleString();
+    distanceDisplay.textContent = `${distanceMeters.toLocaleString()}m`;
+    topSpeedDisplay.textContent = topSpeedVal;
+
+    const totalVaultDisplay = document.getElementById('totalVaultCoins');
+    if (totalVaultDisplay) {
+        totalVaultDisplay.textContent = `${record.totalCoins.toLocaleString()} COINS`;
+    }
+
+    if (bestScoreDisplay) {
+        bestScoreDisplay.textContent = record.career.highScore.toLocaleString();
+    }
+    if (bestCoinsDisplay) {
+        bestCoinsDisplay.textContent = record.career.maxCoins.toLocaleString();
+    }
+
+    if (newRecordBadge) {
+        if (record.isNewHighScore && record.isNewMaxCoins) {
+            newRecordBadge.textContent = 'NEW ALL-TIME RECORD!';
+            newRecordBadge.classList.remove('hidden');
+        } else if (record.isNewHighScore) {
+            newRecordBadge.textContent = 'NEW HIGH SCORE!';
+            newRecordBadge.classList.remove('hidden');
+        } else if (record.isNewMaxCoins) {
+            newRecordBadge.textContent = 'NEW COIN RECORD!';
+            newRecordBadge.classList.remove('hidden');
+        } else {
+            newRecordBadge.classList.add('hidden');
+        }
+    }
+};
+
+const hideGameOverScreen = () => {
+    gameOverScreen.classList.add('hidden');
+    if (newRecordBadge) {
+        newRecordBadge.classList.add('hidden');
+    }
+    gameScreen.classList.remove('hidden');
+};
+
+const showPauseScreen = () => {
+    gameScreen.classList.add('hidden');
+    pauseScreen.classList.remove('hidden');
+};
+
+const hidePauseScreen = () => {
+    pauseScreen.classList.add('hidden');
+    gameScreen.classList.remove('hidden');
+};
+
+const cancelCountdown = () => {
+    if (countdownInterval) {
+        clearInterval(countdownInterval);
+        countdownInterval = null;
+    }
+    isCountingDown = false;
+    if (countdownOverlay) countdownOverlay.classList.add('hidden');
+    audio.stopEngineStart();
+};
+
+const togglePause = () => {
+    if (isCountingDown || !game.running) return;
+    
+    if (game.paused) {
+        resumeGame();
+    } else {
+        game.pause();
+        showPauseScreen();
+    }
+};
+
+const resumeGame = () => {
+    hidePauseScreen();
+    game.resume();
+    updateHUD();
+};
+
+const retryGame = () => {
+    hideGameOverScreen();
+    startGame();
+};
+
+const goHome = () => {
+    cancelCountdown();
+    game.stop();
+    if (challengeMode) {
+        stopChallengeMusic(() => window.parent.postMessage({ type: 'roadChallengeReturn' }, '*'), true);
+        return;
+    }
+    window.location.href = './index.html';
+};
+
+const handleNitroTrigger = (e) => {
+    if (e) e.preventDefault();
+    if (isCountingDown || !game.running || game.paused) return;
+    player.activateNitro();
+};
+
+const updateAudioButtonUI = () => {
+    if (!audioBtn) return;
+    audioBtn.textContent = audio.isMuted ? '🔇' : '🔊';
+    audioBtn.classList.toggle('muted', audio.isMuted);
+    audioBtn.setAttribute('title', audio.isMuted ? 'Unmute audio (M)' : 'Mute audio (M)');
+};
+
+const toggleAudio = (e) => {
+    if (e) e.preventDefault();
+    audio.toggleMute();
+    updateAudioButtonUI();
+};
+
+const startCountdown = (onComplete) => {
+    cancelCountdown();
+    isCountingDown = true;
+
+    playerInitialized();
+    game.initialize(roadElement);
+    game.showGameOverScreen = showGameOverScreen;
+
+    if (!countdownOverlay || !countdownNumber) {
+        isCountingDown = false;
+        if (typeof onComplete === 'function') onComplete();
+        return;
+    }
+
+    countdownOverlay.classList.remove('hidden');
+
+    // Play car engine start sound immediately
+    audio.playEngineStart();
+
+    let count = 3;
+    const updateCountdownDisplay = (val, className) => {
+        countdownNumber.textContent = val;
+        countdownNumber.className = `countdown-number ${className}`;
+        // Re-trigger animation
+        countdownNumber.style.animation = 'none';
+        void countdownNumber.offsetWidth; // Reflow
+        countdownNumber.style.animation = '';
+    };
+
+    updateCountdownDisplay(count, `count-${count}`);
+
+    countdownInterval = setInterval(() => {
+        count--;
+        if (count > 0) {
+            updateCountdownDisplay(count, `count-${count}`);
+        } else if (count === 0) {
+            // "GO!" hits at exactly 3 seconds
+            updateCountdownDisplay('GO!', 'count-go');
+
+            clearInterval(countdownInterval);
+            countdownInterval = null;
+            isCountingDown = false;
+
+            // Stop engine start sound right at 3 seconds as the race starts
+            audio.stopEngineStart(true);
+
+            // Start race immediately on GO!
+            if (typeof onComplete === 'function') {
+                onComplete();
+            }
+
+            // Fade countdown overlay away smoothly while cars launch
+            setTimeout(() => {
+                if (countdownOverlay) {
+                    countdownOverlay.classList.add('hidden');
+                }
+            }, 600);
+        }
+    }, 1000);
+};
+
+const startGame = () => {
+    // In the birthday flow the player has already opened the challenge dialog;
+    // start driving immediately so the embedded game never looks idle behind
+    // an autoplay-blocked audio countdown.
+    if (challengeMode) {
+        cancelCountdown();
+        playerInitialized();
+        game.initialize(roadElement);
+        game.showGameOverScreen = showGameOverScreen;
+        game.start();
+        updateHUD();
+        return;
+    }
+    startCountdown(() => {
+        game.start();
+        updateHUD();
+    });
+};
+
+const updateHUD = () => {
+    if (!game.running) return;
+
+    scoreDisplay.textContent = Math.floor(game.score).toLocaleString();
+    if (challengeMode && challengeBanner) {
+        const remaining = Math.max(0, Math.ceil(game.challengeDuration - game.challengeElapsed));
+        challengeBanner.textContent = `DESAFIO DA LOCADORA · ${remaining} SEGUNDOS`;
+    }
+    if (coinsDisplay) coinsDisplay.textContent = game.coins;
+    // Real-time dynamic arcade speed in KM/H (matching screenshot ~148 KM/H)
+    speedDisplay.textContent = Math.round(game.speed * 12 + 40);
+
+    // Update Nitro bar and button indicators
+    const nitroVal = Math.round(player.nitroGauge);
+    if (nitroBarFill) {
+        nitroBarFill.style.width = `${nitroVal}%`;
+    }
+    if (nitroPercent) {
+        nitroPercent.textContent = `${nitroVal}%`;
+    }
+
+    if (player.isNitroActive) {
+        if (nitroBarFill) nitroBarFill.classList.add('active-burning');
+        if (nitroActionBtn) {
+            nitroActionBtn.classList.add('boosting');
+            nitroActionBtn.textContent = 'BOOSTING';
+        }
+        if (mobileNitroBtn) {
+            mobileNitroBtn.classList.add('boosting');
+            mobileNitroBtn.textContent = 'BOOST ACTIVE';
+        }
+    } else {
+        if (nitroBarFill) nitroBarFill.classList.remove('active-burning');
+        if (nitroActionBtn) {
+            nitroActionBtn.classList.remove('boosting');
+            if (nitroVal >= 20) {
+                nitroActionBtn.classList.add('ready');
+                nitroActionBtn.textContent = 'BOOST';
+            } else {
+                nitroActionBtn.classList.remove('ready');
+                nitroActionBtn.textContent = 'NEED NITRO';
+            }
+        }
+        if (mobileNitroBtn) {
+            mobileNitroBtn.classList.remove('boosting');
+            if (nitroVal >= 20) {
+                mobileNitroBtn.classList.add('ready');
+                mobileNitroBtn.textContent = 'BOOST';
+            } else {
+                mobileNitroBtn.classList.remove('ready');
+                mobileNitroBtn.textContent = 'NEED NITRO';
+            }
+        }
+    }
+
+    // Update lives display (❤️ for alive, 🖤 for lost)
+    const lifeElements = livesDisplay ? livesDisplay.querySelectorAll('.life-heart, .life') : [];
+    lifeElements.forEach((life, index) => {
+        if (index < game.lives) {
+            life.classList.remove('lost');
+            life.textContent = '❤️';
+        } else {
+            life.classList.add('lost');
+            life.textContent = '🖤';
+        }
+    });
+
+    requestAnimationFrame(updateHUD);
+};
+
+if (pauseBtn) pauseBtn.addEventListener('click', togglePause);
+if (retryBtn) retryBtn.addEventListener('click', retryGame);
+if (homeBtn) homeBtn.addEventListener('click', goHome);
+if (resumeBtn) resumeBtn.addEventListener('click', resumeGame);
+if (quitBtn) quitBtn.addEventListener('click', goHome);
+
+const pauseRestartBtn = document.getElementById('pauseRestartBtn');
+if (pauseRestartBtn) {
+    pauseRestartBtn.addEventListener('click', () => {
+        hidePauseScreen();
+        game.stop();
+        startGame();
+    });
+}
+
+if (audioBtn) {
+    updateAudioButtonUI();
+    audioBtn.addEventListener('click', toggleAudio);
+    audioBtn.addEventListener('touchstart', toggleAudio, { passive: false });
+}
+
+if (nitroActionBtn) {
+    nitroActionBtn.addEventListener('click', handleNitroTrigger);
+    nitroActionBtn.addEventListener('touchstart', handleNitroTrigger, { passive: false });
+}
+
+if (mobileNitroBtn) {
+    mobileNitroBtn.addEventListener('click', handleNitroTrigger);
+    mobileNitroBtn.addEventListener('touchstart', handleNitroTrigger, { passive: false });
+}
+
+if (steerLeftBtn) {
+    const handleSteerLeft = (e) => {
+        if (e) e.preventDefault();
+        if (isCountingDown || !game.running || game.paused) return;
+        keys.ArrowLeft = true;
+        setTimeout(() => { keys.ArrowLeft = false; }, 80);
+    };
+    steerLeftBtn.addEventListener('click', handleSteerLeft);
+    steerLeftBtn.addEventListener('touchstart', handleSteerLeft, { passive: false });
+}
+
+if (steerRightBtn) {
+    const handleSteerRight = (e) => {
+        if (e) e.preventDefault();
+        if (isCountingDown || !game.running || game.paused) return;
+        keys.ArrowRight = true;
+        setTimeout(() => { keys.ArrowRight = false; }, 80);
+    };
+    steerRightBtn.addEventListener('click', handleSteerRight);
+    steerRightBtn.addEventListener('touchstart', handleSteerRight, { passive: false });
+}
+
+document.addEventListener('keydown', (e) => {
+    if (challengeMode && (e.key === 'Escape' || e.key === 'Home')) {
+        e.preventDefault();
+        stopChallengeMusic(() => window.parent.postMessage({ type: 'roadChallengeReturn' }, '*'), true);
+    }
+    if (e.key === 'Escape' && game.running) {
+        togglePause();
+    }
+    if (e.key === 'm' || e.key === 'M') {
+        toggleAudio();
+    }
+});
+
+// Resume Web Audio Context & trigger start audio on first player gesture
+const unlockAudio = () => {
+    audio.resume();
+    if (isCountingDown && (!audio.engineStartAudio || audio.engineStartAudio.paused)) {
+        audio.playEngineStart();
+    }
+    window.removeEventListener('keydown', unlockAudio);
+    window.removeEventListener('pointerdown', unlockAudio);
+    window.removeEventListener('touchstart', unlockAudio);
+};
+window.addEventListener('keydown', unlockAudio, { passive: true, once: true });
+window.addEventListener('pointerdown', unlockAudio, { passive: true, once: true });
+window.addEventListener('touchstart', unlockAudio, { passive: true, once: true });
+
+// Start game on load
+startGame();
